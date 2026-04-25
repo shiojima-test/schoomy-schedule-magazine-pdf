@@ -11,11 +11,30 @@ import requests
 from jinja2 import Environment, FileSystemLoader
 from playwright.async_api import async_playwright
 
-CSV_URL = (
+SHEET_BASE = (
     "https://docs.google.com/spreadsheets/d/e/"
-    "2PACX-1vRooWpJWGHr60e039XzbxEbeZ7p6zEL-wuP-xrq4jv1TnZXHSOWjtT8FvScuKsQn05aZx8PfIW14d83"
-    "/pub?output=csv"
+    "2PACX-1vRooWpJWGHr60e039XzbxEbeZ7p6zEL-wuP-xrq4jv1TnZXHSOWjtT8FvScuKsQn05aZx8PfIW14d83/pub"
 )
+CSV_URL = f"{SHEET_BASE}?output=csv"
+CONFIG_CSV_URL = f"{SHEET_BASE}?gid=918840879&single=true&output=csv"
+
+
+def fetch_config():
+    """configシートから version と lastUpdate を読む。
+    キャッシュ回避のため URL にタイムスタンプを付与する。"""
+    import time
+    url = f"{CONFIG_CSV_URL}&_ts={int(time.time())}"
+    resp = requests.get(url, timeout=30)
+    resp.raise_for_status()
+    resp.encoding = 'utf-8'
+    reader = csv.DictReader(StringIO(resp.text))
+    kv = {row['key'].strip(): row['value'].strip() for row in reader if row.get('key')}
+    if 'version' not in kv or 'lastUpdate' not in kv:
+        raise RuntimeError(f'config sheet missing required keys; got {list(kv)}')
+    return {
+        'version': int(kv['version']),
+        'last_update': kv['lastUpdate'],
+    }
 
 
 def resolve_year_month(row):
@@ -196,10 +215,11 @@ async def html_to_pdf(html, output_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', type=int, required=True)
-    parser.add_argument('--update-date', required=True)
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
+
+    config = fetch_config()
+    print(f"config: version={config['version']} lastUpdate={config['last_update']}")
 
     rows = fetch_rows()
     groups = group_by_month(rows)
@@ -209,7 +229,7 @@ def main():
     logo_b64 = base64.b64encode(logo_path.read_bytes()).decode('ascii')
     logo_data_uri = f"data:image/svg+xml;base64,{logo_b64}"
 
-    html = render_html(groups, args.version, args.update_date, logo_data_uri)
+    html = render_html(groups, config['version'], config['last_update'], logo_data_uri)
     asyncio.run(html_to_pdf(html, args.output))
     print(f"Generated: {args.output}")
 
