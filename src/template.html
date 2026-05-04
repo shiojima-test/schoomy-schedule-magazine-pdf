@@ -33,7 +33,7 @@
   .bottom-bar .b1 { height: 2mm; background: var(--teal); }
   .bottom-bar .b2 { height: 1mm; background: var(--teal-dark); }
 
-  .title-area { display: flex; align-items: center; gap: 3mm; padding-top: 2mm; margin-bottom: 1.5mm; }
+  .title-area { display: flex; align-items: center; gap: 3mm; padding-top: 2mm; margin-bottom: 1.0mm; }
   .logo { width: 18mm; height: 18mm; flex-shrink: 0; }
   .title-text { flex: 1; }
   .title-main { font-size: 22pt; font-weight: 900; line-height: 1.1; letter-spacing: 0.02em; }
@@ -43,7 +43,7 @@
   .title-right .company { font-size: 8.5pt; color: var(--teal-dark); font-weight: 700; }
   .title-right .url { font-size: 6.5pt; color: var(--gray-light); }
 
-  .title-line { border-top: 1.2pt solid var(--teal); border-bottom: 0.3pt solid var(--teal); height: 1mm; margin-bottom: 2mm; }
+  .title-line { border-top: 1.2pt solid var(--teal); border-bottom: 0.3pt solid var(--teal); height: 1mm; margin-bottom: 1.5mm; }
 
   .legend { display: flex; align-items: center; gap: 3mm; font-size: 7.5pt; color: var(--gray); padding: 1mm 0 1.5mm; }
   .legend-tag { display: inline-block; padding: 0.8mm 2mm; color: white; font-size: 7.5pt; font-weight: 700; }
@@ -51,12 +51,12 @@
   .legend-tag.setsumei { background: var(--blue); }
   .legend-note { margin-left: auto; font-size: 6.5pt; color: var(--gray-light); }
 
-  .content { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; padding-bottom: 10mm; }
-  .column { display: flex; flex-direction: column; gap: 1.5mm; }
+  .content { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; padding-bottom: 8mm; }
+  .column { display: flex; flex-direction: column; gap: 1.0mm; }
   .month-block { display: flex; flex-direction: column; }
   .month-header {
     background: var(--teal); color: white; font-weight: 700; font-size: 9pt;
-    padding: 1.1mm 2.5mm; position: relative; letter-spacing: 0.02em;
+    padding: 0.9mm 2.5mm; position: relative; letter-spacing: 0.02em;
   }
   .month-header::after {
     content: ''; position: absolute; right: 0; bottom: 0;
@@ -66,7 +66,7 @@
   }
   .events { display: flex; flex-direction: column; gap: 0.3mm; margin-top: 0.8mm; }
 
-  .row { position: relative; padding: 1.0mm 2mm 1.0mm 3.5mm; }
+  .row { position: relative; padding: 0.7mm 2mm 0.7mm 3.5mm; }
   .row:nth-child(odd) { background: var(--bg-stripe); }
   .row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.5mm; }
   .row.festa::before { background: var(--orange); }
