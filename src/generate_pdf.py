@@ -107,7 +107,7 @@ def shorten_host(host):
 
 
 def normalize_event(row):
-    kind = 'フェスタ' if row['type'] == 'festa' else '説明会'
+    kind = 'コンテスト' if row['type'] == 'festa' else '説明会'
 
     target = (row.get('target') or '').strip()
     if target.startswith('・'):
@@ -119,7 +119,7 @@ def normalize_event(row):
 
     return {
         'kind': kind,
-        'kind_class': 'festa' if kind == 'フェスタ' else 'setsumei',
+        'kind_class': 'festa' if kind == 'コンテスト' else 'setsumei',
         'date': format_date(row),
         'time': (row.get('time') or '').strip() if kind == '説明会' else '',
         'title': row.get('title', '').strip(),
@@ -161,7 +161,7 @@ def estimate_block_mm(events):
             sub_lines = max(1, (len(ev['sub']) * 1.5) // 50 + 1)
             eh += sub_lines * 2.4 + 0.8
         eh += 2.5
-        if ev['kind'] == 'フェスタ':
+        if ev['kind'] == 'コンテスト':
             eh += 2.5
         eh += 0.4
         h += eh
