@@ -144,7 +144,7 @@
               <span class="dlabel">主催</span><span class="dval">{{ ev.host }}</span>
               {% endif %}
             </div>
-            {% if ev.kind in ['コンテスト', 'フェスタ'] %}
+            {% if ev.kind == 'コンテスト' %}
             <div class="details">
               <span class="dlabel">エントリー</span><span class="dval">{{ ev.entry }}</span>
               <span class="dlabel">予選通過</span><span class="dval">{{ ev.result }}</span>
