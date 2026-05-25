@@ -98,8 +98,8 @@
   <div class="title-area">
     <img class="logo" src="{{ logo_data_uri }}" alt="SchooMy">
     <div class="title-text">
-      <div class="title-main">フェスタスケジュール</div>
-      <div class="title-sub">SCHOOMY FESTA ANNUAL SCHEDULE 2026</div>
+      <div class="title-main">スケジュール</div>
+      <div class="title-sub">SCHEDULE 2026</div>
     </div>
     <div class="title-right">
       <div class="version">v{{ version }} / {{ update_date }} UPDATED</div>
@@ -112,7 +112,7 @@
 
   <div class="legend">
     <span>※種別タグ：</span>
-    <span class="legend-tag festa">フェスタ</span>
+    <span class="legend-tag festa">コンテスト</span>
     <span>＝全国大会・競技大会</span>
     <span class="legend-tag setsumei">説明会</span>
     <span>＝大会に向けた説明会・交流会</span>
@@ -137,11 +137,11 @@
             {% if ev.sub %}<div class="sub">・{{ ev.sub }}</div>{% endif %}
             <div class="details">
               <span class="dlabel">開催地</span><span class="dval">{{ ev.location }}</span>
-              {% if ev.kind == 'フェスタ' %}
+              {% if ev.kind == 'コンテスト' %}
               <span class="dlabel">主催</span><span class="dval">{{ ev.host }}</span>
               {% endif %}
             </div>
-            {% if ev.kind == 'フェスタ' %}
+            {% if ev.kind == 'コンテスト' %}
             <div class="details">
               <span class="dlabel">エントリー</span><span class="dval">{{ ev.entry }}</span>
               <span class="dlabel">予選通過</span><span class="dval">{{ ev.result }}</span>
