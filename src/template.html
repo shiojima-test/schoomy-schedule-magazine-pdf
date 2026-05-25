@@ -47,7 +47,8 @@
 
   .legend { display: flex; align-items: center; gap: 3mm; font-size: 7.5pt; color: var(--gray); padding: 1mm 0 1.5mm; }
   .legend-tag { display: inline-block; padding: 0.8mm 2mm; color: white; font-size: 7.5pt; font-weight: 700; }
-  .legend-tag.festa { background: var(--orange); }
+  .legend-tag.contest { background: var(--orange); }
+  .legend-tag.festa { background: var(--teal); }
   .legend-tag.setsumei { background: var(--blue); }
   .legend-note { margin-left: auto; font-size: 6.5pt; color: var(--gray-light); }
 
@@ -69,11 +70,13 @@
   .row { position: relative; padding: 0.7mm 2mm 0.7mm 3.5mm; }
   .row:nth-child(odd) { background: var(--bg-stripe); }
   .row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 1.5mm; }
-  .row.festa::before { background: var(--orange); }
+  .row.contest::before { background: var(--orange); }
+  .row.festa::before { background: var(--teal); }
   .row.setsumei::before { background: var(--blue); }
   .row-head { display: flex; align-items: center; gap: 2mm; margin-bottom: 0.7mm; }
   .tag { display: inline-block; padding: 0.3mm 1.5mm; color: white; font-size: 7pt; font-weight: 700; min-width: 10mm; text-align: center; }
-  .tag-festa { background: var(--orange); }
+  .tag-contest { background: var(--orange); }
+  .tag-festa { background: var(--teal); }
   .tag-setsumei { background: var(--blue); }
   .date { font-size: 9pt; font-weight: 700; color: #111; }
   .time { font-size: 8.2pt; color: var(--teal-dark); font-weight: 700; margin-left: 0.5mm; }
@@ -112,10 +115,10 @@
 
   <div class="legend">
     <span>※種別タグ：</span>
-    <span class="legend-tag festa">コンテスト</span>
+    <span class="legend-tag festa">フェスタ</span>
+    <span>＝一般開放をして発表やワークショップが楽しめるイベント</span>
+    <span class="legend-tag contest">コンテスト</span>
     <span>＝全国大会・競技大会</span>
-    <span class="legend-tag setsumei">説明会</span>
-    <span>＝大会に向けた説明会・交流会</span>
     <span class="legend-note">日付・会場等は変更になる場合があります</span>
   </div>
 
@@ -137,11 +140,11 @@
             {% if ev.sub %}<div class="sub">・{{ ev.sub }}</div>{% endif %}
             <div class="details">
               <span class="dlabel">開催地</span><span class="dval">{{ ev.location }}</span>
-              {% if ev.kind == 'コンテスト' %}
+              {% if ev.kind in ['コンテスト', 'フェスタ'] %}
               <span class="dlabel">主催</span><span class="dval">{{ ev.host }}</span>
               {% endif %}
             </div>
-            {% if ev.kind == 'コンテスト' %}
+            {% if ev.kind in ['コンテスト', 'フェスタ'] %}
             <div class="details">
               <span class="dlabel">エントリー</span><span class="dval">{{ ev.entry }}</span>
               <span class="dlabel">予選通過</span><span class="dval">{{ ev.result }}</span>
