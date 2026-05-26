@@ -1,4 +1,10 @@
 """SchooMy Festa annual schedule (magazine layout) — HTML→Playwright→PDF."""
+# v1: is_published == 'TRUE' で PDF 掲載判定 (HP と同じフラグを兼用)
+# v2: 新列 show_in_pdf で PDF 掲載判定。is_published による PDF 除外は廃止
+#     (HP 側ロジックは無変更)。show_in_pdf が FALSE/0/NO のときだけ非掲載、
+#     空欄・TRUE・列なしは掲載 (後方互換)。
+__version__ = '2'
+
 import argparse
 import asyncio
 import base64
@@ -48,20 +54,32 @@ def resolve_year_month(row):
     return row.get('year', ''), (row.get('month') or '').zfill(2)
 
 
+def _is_pdf_visible(row):
+    """PDF 掲載可否を判定する (v2)。
+    show_in_pdf が FALSE/0/NO (大文字小文字問わず) のときだけ非掲載。
+    空欄・TRUE・列が存在しない場合は掲載 (後方互換)。
+    is_published は参照しない。"""
+    v = (row.get('show_in_pdf') or '').strip().upper()
+    return v not in ('FALSE', '0', 'NO')
+
+
 def fetch_rows():
     resp = requests.get(CSV_URL, timeout=30)
     resp.raise_for_status()
     resp.encoding = 'utf-8'
     reader = csv.DictReader(StringIO(resp.text))
     rows = []
+    total = 0
     for r in reader:
-        if (r.get('is_published') or '').strip().upper() != 'TRUE':
+        total += 1
+        if not _is_pdf_visible(r):
             continue
         if r.get('type') == 'local':
             continue
         if not r.get('title'):
             continue
         rows.append(r)
+    print(f'rows: {total} in CSV -> {len(rows)} visible in PDF (script v{__version__})')
 
     def sort_key(row):
         ds = (row.get('date_start') or '').strip()
