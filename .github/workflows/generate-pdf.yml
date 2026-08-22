@@ -1,5 +1,8 @@
 name: Generate Schedule PDF (Magazine)
 
+permissions:
+  contents: write
+
 on:
   repository_dispatch:
     types: [generate-pdf]
@@ -47,6 +50,23 @@ jobs:
         with:
           name: schedule-pdf
           path: schedule.pdf
+
+      # レイアウト確認用のプレビュー画像をリポジトリに残す
+      - name: Render preview PNG
+        run: |
+          sudo apt-get install -y poppler-utils
+          mkdir -p debug
+          pdftoppm -png -r 110 -f 1 -l 1 schedule.pdf debug/preview
+          mv debug/preview-1.png debug/preview.png
+
+      - name: Commit preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add debug/preview.png
+          git commit -m "chore: プレビュー画像を更新" || exit 0
+          git pull --rebase
+          git push
 
       - name: Upload to Google Drive
         env:
