@@ -3,7 +3,13 @@
 # v2: 新列 show_in_pdf で PDF 掲載判定。is_published による PDF 除外は廃止
 #     (HP 側ロジックは無変更)。show_in_pdf が FALSE/0/NO のときだけ非掲載、
 #     空欄・TRUE・列なしは掲載 (後方互換)。
-__version__ = '2'
+# v3: 常に1ページに収める自動フィットを追加。
+#     - viewport を紙面と同じ 210x257mm 相当の px に設定し、画面計測=印刷結果にする
+#     - template.html 内の __fitToOnePage() で月ブロックを実測して左右カラムを再配分し、
+#       フッター上端に収まる最大倍率を二分探索して .content を縮小
+#     - page.pdf に page_ranges='1' を付与し、出力を物理的に1ページへ固定
+#     Python 側の estimate_block_mm / split_columns は初期配置の推定として残置。
+__version__ = '3'
 
 import argparse
 import asyncio
@@ -222,16 +228,36 @@ def render_html(groups, version, update_date, logo_data_uri):
     )
 
 
+PAGE_W_MM = 210
+PAGE_H_MM = 257
+PX_PER_MM = 96 / 25.4
+
+
 async def html_to_pdf(html, output_path):
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        page = await browser.new_page()
+        # 紙面と同じピクセル寸法で組むことで、画面上の実測値が印刷結果と一致する
+        page = await browser.new_page(viewport={
+            'width': round(PAGE_W_MM * PX_PER_MM),
+            'height': round(PAGE_H_MM * PX_PER_MM),
+        })
         await page.set_content(html, wait_until='networkidle')
-        await page.wait_for_timeout(1500)
+        try:
+            await page.evaluate('() => document.fonts.ready')
+        except Exception as e:  # noqa: BLE001
+            print(f'font wait skipped: {e}')
+        await page.wait_for_timeout(1200)
+
+        fit = await page.evaluate('() => window.__fitToOnePage()')
+        print(f'fit: {fit}')
+        if isinstance(fit, dict) and fit.get('scale', 1) <= 0.46:
+            print('WARNING: 縮小率が下限に達しました。行数が多すぎる可能性があります。')
+
         await page.pdf(
             path=output_path,
-            width='210mm', height='257mm',
+            width=f'{PAGE_W_MM}mm', height=f'{PAGE_H_MM}mm',
             print_background=True,
+            page_ranges='1',
             margin={'top': '0', 'bottom': '0', 'left': '0', 'right': '0'},
         )
         await browser.close()

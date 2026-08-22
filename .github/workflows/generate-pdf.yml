@@ -32,6 +32,22 @@ jobs:
       - name: Generate PDF
         run: python src/generate_pdf.py --output schedule.pdf
 
+      # 1ページでなければ Drive を上書きせずに失敗させる（公開中PDFを壊さない）
+      - name: Verify single page
+        run: |
+          python - <<'PY'
+          from pypdf import PdfReader
+          n = len(PdfReader('schedule.pdf').pages)
+          print(f'PDF pages: {n}')
+          assert n == 1, f'expected 1 page, got {n}'
+          PY
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: schedule-pdf
+          path: schedule.pdf
+
       - name: Upload to Google Drive
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}

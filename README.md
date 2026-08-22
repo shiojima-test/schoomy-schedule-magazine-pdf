@@ -79,4 +79,9 @@ export GOOGLE_SERVICE_ACCOUNT_JSON="$(cat service-account-key.json)"
 
 - **`Service Accounts do not have storage quota` (403)**: 同名ファイルが Drive に存在しないとき発生。誰かが手動でプレースホルダ（同名）を置けば、以降は SA が `update()` で上書きできる。
 - **GitHub Push Protection で OAuth Token がブロック**: `gas_trigger.gs` の `GITHUB_TOKEN` は `PASTE_YOUR_GITHUB_TOKEN_HERE` プレースホルダのままコミットし、貼り付け時に差し替える。
-- **PDF が 1ページに収まらない**: 本テンプレでは外周マージンを最小限に圧縮済み。CSV 行数が増えると改ページが起きる可能性あり。`src/generate_pdf.py` の `estimate_block_mm` と `template.html` の row 高さを調整。
+- **PDF が 1ページに収まらない**: v3 以降は自動フィットで常に1ページになるため、原則として手動調整は不要。
+  `template.html` の `__fitToOnePage()` が月ブロックの実測高さで左右カラムを再配分し、フッター上端に収まる最大倍率を二分探索して `.content` を縮小する。
+  さらに `page.pdf(page_ranges='1')` で出力を物理的に1ページへ固定している。
+  Actions のログに `fit: {'scale': ..., 'usedMm': ..., 'availableMm': ...}` が出るので、縮小率はここで確認できる。
+  `scale` が 0.5 を下回るほど文字が小さいと感じる場合は、CSV 側で `show_in_pdf` を `FALSE` にして掲載件数を減らすのが正攻法。
+- **1ページに収まらなかった場合**: `Verify single page` ステップで Actions が失敗し、Drive の公開PDFは上書きされずに前の版が残る。

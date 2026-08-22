@@ -22,7 +22,9 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  body { width: 210mm; min-height: 257mm; padding: 3.5mm 7mm 4mm; position: relative; }
+  body { width: 210mm; height: 257mm; padding: 3.5mm 7mm 4mm; position: relative; }
+  /* 計測時にスクロールバーで幅が変わるのを防ぐ（印刷には影響しない） */
+  @media screen { html { overflow: hidden; } }
   .month-block, .row { break-inside: avoid; }
 
   .top-bar { position: absolute; top: 0; left: 0; right: 0; }
@@ -52,7 +54,7 @@
   .legend-tag.setsumei { background: var(--blue); }
   .legend-note { margin-left: auto; font-size: 6.5pt; color: var(--gray-light); }
 
-  .content { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; padding-bottom: 6mm; }
+  .content { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; padding-bottom: 1mm; }
   .column { display: flex; flex-direction: column; gap: 0.7mm; }
   .month-block { display: flex; flex-direction: column; }
   .month-header {
@@ -124,7 +126,7 @@
 
   <div class="content">
     {% for col in [left_blocks, right_blocks] %}
-    <div class="column">
+    <div class="column" id="{{ 'colL' if loop.first else 'colR' }}">
       {% for label, events in col %}
       <div class="month-block">
         <div class="month-header">{{ label }}</div>
@@ -165,5 +167,92 @@
   </div>
 
   <div class="bottom-bar"><div class="b1"></div><div class="b2"></div></div>
+
+<script>
+/* ------------------------------------------------------------------
+   1ページ自動収納スクリプト
+   - 月ブロックの実測高さで左右カラムを均等割り（Python側の推定値は初期値）
+   - フッター上端までに収まる最大の倍率を二分探索して .content を縮小
+   - 行数が増減しても改ページが起きない
+   ------------------------------------------------------------------ */
+(function () {
+  var MM = 96 / 25.4;
+  var MIN_SCALE = 0.45;
+  var SAFETY = 0.985;   // 画面計測と印刷レイアウトの微差を吸収
+
+  window.__fitToOnePage = function () {
+    var content = document.querySelector('.content');
+    var colL = document.getElementById('colL');
+    var colR = document.getElementById('colR');
+    var footer = document.querySelector('.footer');
+    if (!content || !colL || !colR) return { scale: 1, error: 'layout nodes missing' };
+
+    var blocks = [];
+    [colL, colR].forEach(function (c) {
+      Array.prototype.forEach.call(c.children, function (b) { blocks.push(b); });
+    });
+    if (!blocks.length) return { scale: 1, error: 'no blocks' };
+
+    var gap = 0.7 * MM;
+
+    function applySplit(i) {
+      blocks.forEach(function (b, idx) { (idx < i ? colL : colR).appendChild(b); });
+    }
+
+    /* 実測高さで最もバランスの取れる分割点を選ぶ（高い方のカラムを最小化） */
+    function rebalance() {
+      applySplit(blocks.length);
+      var h = blocks.map(function (b) { return b.getBoundingClientRect().height; });
+      var best = blocks.length > 1 ? 1 : blocks.length;
+      var bestVal = Infinity;
+      for (var i = 1; i < blocks.length; i++) {
+        var l = 0, r = 0, k;
+        for (k = 0; k < i; k++) l += h[k] + gap;
+        for (k = i; k < blocks.length; k++) r += h[k] + gap;
+        var v = Math.max(l, r);
+        if (v < bestVal - 0.5) { bestVal = v; best = i; }
+      }
+      applySplit(best);
+      return best;
+    }
+
+    var top = content.getBoundingClientRect().top;
+    var limit = footer ? footer.getBoundingClientRect().top - 2 * MM
+                       : 257 * MM - 12 * MM;
+    var available = (limit - top) * SAFETY;
+
+    /* 倍率 s で組んだときの「見た目の高さ」を返す */
+    function heightAt(s) {
+      content.style.transform = 'none';
+      content.style.width = (100 / s) + '%';
+      rebalance();
+      var h = Math.max(content.scrollHeight, content.getBoundingClientRect().height);
+      return h * s;
+    }
+
+    var scale = 1;
+    if (heightAt(1) > available) {
+      var lo = MIN_SCALE, hi = 1;
+      scale = MIN_SCALE;
+      for (var it = 0; it < 18; it++) {
+        var mid = (lo + hi) / 2;
+        if (heightAt(mid) <= available) { lo = mid; scale = mid; }
+        else { hi = mid; }
+      }
+    }
+
+    var finalHeight = heightAt(scale);
+    content.style.transformOrigin = 'top left';
+    content.style.transform = 'scale(' + scale + ')';
+
+    return {
+      scale: Math.round(scale * 1000) / 1000,
+      availableMm: Math.round(available / MM * 10) / 10,
+      usedMm: Math.round(finalHeight / MM * 10) / 10,
+      blocks: blocks.length
+    };
+  };
+})();
+</script>
 </body>
 </html>
