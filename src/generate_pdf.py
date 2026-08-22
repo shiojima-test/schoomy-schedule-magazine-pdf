@@ -100,6 +100,38 @@ def fetch_rows():
     return rows
 
 
+def month_key_of(row):
+    """行の年月を 'YYYY-MM' で返す。判定できない場合は None。"""
+    y, m = resolve_year_month(row)
+    if y and m:
+        return f'{y}-{m}'
+    return None
+
+
+def next_month_jst():
+    """JST の翌月を 'YYYY-MM' で返す（掲載用の既定の開始月）。"""
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone(timedelta(hours=9)))
+    y, m = now.year, now.month + 1
+    if m > 12:
+        y, m = y + 1, 1
+    return f'{y}-{m:02d}'
+
+
+def filter_from_month(rows, start_month):
+    """start_month ('YYYY-MM') より前の月の行を除外する。
+    年月が判定できない行は残す（掲載漏れを防ぐため）。"""
+    if not start_month:
+        return rows
+    kept = []
+    for r in rows:
+        key = month_key_of(r)
+        if key is None or key >= start_month:
+            kept.append(r)
+    print(f'start-month {start_month}: {len(rows)} -> {len(kept)} rows')
+    return kept
+
+
 def format_date(row):
     dt = (row.get('date_text') or '').strip()
     if dt:
@@ -235,12 +267,21 @@ async def html_to_pdf(html, output_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', required=True)
+    parser.add_argument(
+        '--start-month',
+        help="この月以降だけを掲載する (例: 2026-09)。'next' でJSTの翌月。省略時は全期間。",
+    )
     args = parser.parse_args()
+
+    start_month = args.start_month
+    if start_month == 'next':
+        start_month = next_month_jst()
 
     config = fetch_config()
     print(f"config: version={config['version']} lastUpdate={config['last_update']}")
 
     rows = fetch_rows()
+    rows = filter_from_month(rows, start_month)
     groups = group_by_month(rows)
 
     repo_root = Path(__file__).resolve().parent.parent

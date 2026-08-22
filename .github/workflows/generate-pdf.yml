@@ -7,6 +7,11 @@ on:
   repository_dispatch:
     types: [generate-pdf]
   workflow_dispatch:
+    inputs:
+      print_start_month:
+        description: '掲載用の開始月 (例 2026-09)。空ならJSTの翌月'
+        required: false
+        default: ''
 
 jobs:
   generate:
@@ -22,7 +27,7 @@ jobs:
       - name: Install M PLUS 2 font
         run: |
           sudo apt-get update
-          sudo apt-get install -y fonts-mplus
+          sudo apt-get install -y fonts-mplus poppler-utils
           fc-cache -fv
           fc-list | grep -i "m plus 2" | head -5
 
@@ -32,43 +37,58 @@ jobs:
       - name: Install Playwright browser
         run: python -m playwright install --with-deps chromium
 
-      - name: Generate PDF
+      # ── ウェブ公開用（全期間・Drive の固定URLを上書き） ──
+      - name: Generate web PDF
         run: python src/generate_pdf.py --output schedule.pdf
+
+      # ── ロクサンヨン掲載用（翌月以降のみ・リポジトリに出力） ──
+      - name: Generate print PDF
+        run: |
+          START="${{ github.event.inputs.print_start_month }}"
+          if [ -z "$START" ]; then START="next"; fi
+          echo "print start month: $START"
+          mkdir -p print
+          python src/generate_pdf.py --output print/schedule_print.pdf --start-month "$START"
 
       # 1ページでなければ Drive を上書きせずに失敗させる（公開中PDFを壊さない）
       - name: Verify single page
         run: |
           python - <<'PY'
           from pypdf import PdfReader
-          n = len(PdfReader('schedule.pdf').pages)
-          print(f'PDF pages: {n}')
-          assert n == 1, f'expected 1 page, got {n}'
+          for path in ('schedule.pdf', 'print/schedule_print.pdf'):
+              n = len(PdfReader(path).pages)
+              print(f'{path}: {n} page(s)')
+              assert n == 1, f'{path}: expected 1 page, got {n}'
           PY
 
-      - name: Upload PDF artifact
+      - name: Upload PDF artifacts
         uses: actions/upload-artifact@v4
         with:
           name: schedule-pdf
-          path: schedule.pdf
+          path: |
+            schedule.pdf
+            print/schedule_print.pdf
 
       # レイアウト確認用のプレビュー画像をリポジトリに残す
-      - name: Render preview PNG
+      - name: Render preview PNGs
         run: |
-          sudo apt-get install -y poppler-utils
           mkdir -p debug
           pdftoppm -png -r 110 -f 1 -l 1 schedule.pdf debug/preview
           mv debug/preview-1.png debug/preview.png
+          pdftoppm -png -r 110 -f 1 -l 1 print/schedule_print.pdf debug/preview_print
+          mv debug/preview_print-1.png debug/preview_print.png
 
-      - name: Commit preview
+      - name: Commit print PDF and previews
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add debug/preview.png
-          git commit -m "chore: プレビュー画像を更新" || exit 0
+          git add debug/preview.png debug/preview_print.png print/schedule_print.pdf
+          git commit -m "chore: 掲載用PDFとプレビュー画像を更新" || exit 0
           git pull --rebase
           git push
 
-      - name: Upload to Google Drive
+      # ウェブ公開用のみ Drive の固定ファイルを上書き（掲載用はアップロードしない）
+      - name: Upload web PDF to Google Drive
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: python upload_to_drive.py schedule.pdf
