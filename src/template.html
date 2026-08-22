@@ -74,6 +74,8 @@
     border-color: transparent transparent var(--cream) transparent;
   }
   .events { margin-top: calc(0.5mm * var(--k)); }
+  /* 段またぎ時に右段の先頭へ差し込む続き見出し */
+  .month-header.cont { margin-bottom: calc(0.5mm * var(--k)); }
 
   .row {
     position: relative;
@@ -188,6 +190,7 @@
    - 本文は2段組（column-fill: auto）で左段を最後まで埋めてから右段へ流す
    - --k（文字サイズ・余白の一括係数）を二分探索し、
      2段に収まる範囲で最大＝紙面を最も埋める値を選ぶ
+   - 月ブロックが段をまたぐ場合は右段の先頭に「（つづき）」見出しを自動挿入
    - 変形(transform)は使わないので右端に余白は出ない
    ------------------------------------------------------------------ */
 (function () {
@@ -207,33 +210,69 @@
     var available = (limit - top) * SAFETY;
     content.style.height = available + 'px';
 
-    /* 3段目にあふれていなければ「収まった」と判定する */
-    function fits(k) {
-      content.style.setProperty('--k', k);
-      void content.offsetHeight;
+    function removeCont() {
+      var old = content.querySelectorAll('.month-header.cont');
+      Array.prototype.forEach.call(old, function (n) { n.parentNode.removeChild(n); });
+    }
+
+    /* 右段の先頭が月ブロックの途中なら、その位置に続き見出しを差し込む */
+    function insertCont() {
+      var box = content.getBoundingClientRect();
+      var mid = box.left + box.width / 2;
+      var rows = content.querySelectorAll('.row');
+      var target = null;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].getBoundingClientRect().left > mid) { target = rows[i]; break; }
+      }
+      if (!target) return;
+      var block = target.closest('.month-block');
+      if (!block) return;
+      var header = block.querySelector('.month-header');
+      if (!header) return;
+      // ブロック自体が右段から始まっている場合は見出しが既にあるので不要
+      if (header.getBoundingClientRect().left > mid) return;
+      var cont = document.createElement('div');
+      cont.className = 'month-header cont';
+      cont.textContent = header.textContent + '（つづき）';
+      target.parentNode.insertBefore(cont, target);
+    }
+
+    function overflows() {
       var box = content.getBoundingClientRect();
       var blocks = content.children;
       for (var i = 0; i < blocks.length; i++) {
-        if (blocks[i].getBoundingClientRect().right > box.right + 1) return false;
+        if (blocks[i].getBoundingClientRect().right > box.right + 1) return true;
       }
-      return content.scrollWidth <= content.clientWidth + 1;
+      return content.scrollWidth > content.clientWidth + 1;
+    }
+
+    /* 係数 k で組み直し、2段に収まったかを返す */
+    function layoutAt(k) {
+      removeCont();
+      content.style.setProperty('--k', k);
+      void content.offsetHeight;
+      insertCont();
+      void content.offsetHeight;
+      return !overflows();
     }
 
     var k = K_MIN;
-    if (fits(K_MAX)) {
+    if (layoutAt(K_MAX)) {
       k = K_MAX;
     } else {
       var lo = K_MIN, hi = K_MAX;
       for (var it = 0; it < 22; it++) {
-        var mid = (lo + hi) / 2;
-        if (fits(mid)) { lo = mid; k = mid; }
-        else { hi = mid; }
+        var mid2 = (lo + hi) / 2;
+        if (layoutAt(mid2)) { lo = mid2; k = mid2; }
+        else { hi = mid2; }
       }
     }
-    fits(k);
+    var ok = layoutAt(k);
 
     return {
       k: Math.round(k * 1000) / 1000,
+      fitted: ok,
+      continued: content.querySelectorAll('.month-header.cont').length,
       availableMm: Math.round(available / MM * 10) / 10,
       blocks: content.children.length
     };
