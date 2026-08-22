@@ -3,13 +3,15 @@
 # v2: 新列 show_in_pdf で PDF 掲載判定。is_published による PDF 除外は廃止
 #     (HP 側ロジックは無変更)。show_in_pdf が FALSE/0/NO のときだけ非掲載、
 #     空欄・TRUE・列なしは掲載 (後方互換)。
-# v3: 常に1ページに収める自動フィットを追加。
-#     - viewport を紙面と同じ 210x257mm 相当の px に設定し、画面計測=印刷結果にする
-#     - template.html 内の __fitToOnePage() で月ブロックを実測して左右カラムを再配分し、
-#       フッター上端に収まる最大倍率を二分探索して .content を縮小
+# v3: 常に1ページに収める自動フィットを追加 (縮小変形方式)。
+# v4: 縮小変形をやめ、CSS段組み + 文字サイズ係数(--k)方式に変更。
+#     - 本文は column-fill:auto の2段組。左段を最後まで埋めてから右段へ流すので
+#       月ブロック単位の振り分けで生じていた下部の空白が出ない
+#     - template.html の __fitToOnePage() が --k (文字サイズ・余白の一括係数) を
+#       二分探索し、2段に収まる範囲で最大＝紙面を最も埋める値を採用
+#     - transform を使わないため右端にも余白が出ない
 #     - page.pdf に page_ranges='1' を付与し、出力を物理的に1ページへ固定
-#     Python 側の estimate_block_mm / split_columns は初期配置の推定として残置。
-__version__ = '3'
+__version__ = '4'
 
 import argparse
 import asyncio
@@ -181,50 +183,17 @@ def month_label(key):
     return f'{y}年{int(m)}月'
 
 
-def estimate_block_mm(events):
-    h = 5.0 + 1.2
-    for ev in events:
-        eh = 2.4 + 4.0
-        name_lines = max(1, (len(ev['title']) * 1.5) // 42 + 1)
-        eh += name_lines * 3.0
-        if ev['sub']:
-            sub_lines = max(1, (len(ev['sub']) * 1.5) // 50 + 1)
-            eh += sub_lines * 2.4 + 0.8
-        eh += 2.5
-        if ev['kind'] in ('コンテスト', 'フェスタ'):
-            eh += 2.5
-        eh += 0.4
-        h += eh
-    h += 2.0
-    return h
-
-
-def split_columns(blocks):
-    heights = [estimate_block_mm(evs) for _, evs in blocks]
-    best_i, best_diff = 1, float('inf')
-    for i in range(1, len(blocks)):
-        left = sum(heights[:i])
-        right = sum(heights[i:])
-        diff = abs(left - right)
-        if diff < best_diff:
-            best_diff = diff
-            best_i = i
-    return best_i
-
-
 def render_html(groups, version, update_date, logo_data_uri):
     env = Environment(loader=FileSystemLoader(Path(__file__).parent))
     template = env.get_template('template.html')
 
     blocks = [(month_label(k), evs) for k, evs in groups.items()]
-    split = split_columns(blocks)
 
     return template.render(
         version=version,
         update_date=update_date,
         logo_data_uri=logo_data_uri,
-        left_blocks=blocks[:split],
-        right_blocks=blocks[split:],
+        blocks=blocks,
     )
 
 
@@ -250,8 +219,8 @@ async def html_to_pdf(html, output_path):
 
         fit = await page.evaluate('() => window.__fitToOnePage()')
         print(f'fit: {fit}')
-        if isinstance(fit, dict) and fit.get('scale', 1) <= 0.46:
-            print('WARNING: 縮小率が下限に達しました。行数が多すぎる可能性があります。')
+        if isinstance(fit, dict) and fit.get('k', 1) <= 0.56:
+            print('WARNING: 文字サイズ係数が下限に達しました。行数が多すぎる可能性があります。')
 
         await page.pdf(
             path=output_path,
