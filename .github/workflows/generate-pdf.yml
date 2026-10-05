@@ -45,6 +45,8 @@ jobs:
       - name: Generate print PDF
         run: |
           START="${{ github.event.inputs.print_start_month }}"
+          # 入力が空なら print/start_month.txt（ロクサンヨンの号の月）を使う。それも無ければJSTの翌月
+          if [ -z "$START" ] && [ -f print/start_month.txt ]; then START="$(tr -d ' \n' < print/start_month.txt)"; fi
           if [ -z "$START" ]; then START="next"; fi
           echo "print start month: $START"
           mkdir -p print
@@ -92,3 +94,9 @@ jobs:
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: python upload_to_drive.py schedule.pdf
+
+      # ロクサンヨン掲載用は別名で同じフォルダに置く（ウェブ用のファイルは触らない）
+      - name: Upload print PDF to Google Drive
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: python upload_to_drive.py print/schedule_print.pdf 'ロクサンヨン掲載用_スケジュール_2026年度.pdf'

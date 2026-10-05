@@ -11,13 +11,13 @@ FOLDER_ID = '12caVEED6ZAF_g30o3ZWmI67GA3g9aFvz'
 PDF_NAME = 'スクーミーフェスタ年間スケジュール_デザイン版_2026年度.pdf'
 
 
-def upload_pdf(local_path, credentials_json_str):
+def upload_pdf(local_path, credentials_json_str, pdf_name=PDF_NAME):
     creds_info = json.loads(credentials_json_str)
     creds = service_account.Credentials.from_service_account_info(
         creds_info, scopes=SCOPES)
     drive = build('drive', 'v3', credentials=creds)
 
-    query = f"name='{PDF_NAME}' and '{FOLDER_ID}' in parents and trashed=false"
+    query = f"name='{pdf_name}' and '{FOLDER_ID}' in parents and trashed=false"
     results = drive.files().list(q=query, fields='files(id, name)').execute()
     existing = results.get('files', [])
 
@@ -32,7 +32,7 @@ def upload_pdf(local_path, credentials_json_str):
         ).execute()
         print(f'既存ファイル上書き: {file_id}')
     else:
-        metadata = {'name': PDF_NAME, 'parents': [FOLDER_ID]}
+        metadata = {'name': pdf_name, 'parents': [FOLDER_ID]}
         file = drive.files().create(
             body=metadata, media_body=media,
             fields='id, webViewLink'
@@ -56,4 +56,5 @@ if __name__ == '__main__':
     creds = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
     if not creds:
         raise RuntimeError('GOOGLE_SERVICE_ACCOUNT_JSON env var is required')
-    upload_pdf(local_pdf, creds)
+    name = sys.argv[2] if len(sys.argv) > 2 else PDF_NAME
+    upload_pdf(local_pdf, creds, name)
