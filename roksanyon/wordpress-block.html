@@ -1,9 +1,10 @@
 <!--
 ========================================================
-  ロクサンヨン 掲載ブロック v1.0
+  ロクサンヨン 掲載ブロック v1.1
   WordPress (SWELL) のカスタムHTMLブロックにそのまま貼る
   - 号の一覧は掲載一覧シートから自動で読む（このコードは号が増えても貼り直し不要）
   - すべて #schoomy-634-v1 の中だけに効く（body などには触れない）
+  - v1.1: PDFの1ページ目が見開き（裏表紙＋背＋表紙）のときは右半分の表紙だけを出す
   - WordPress対策: JS に & を使わない / 丸数字・ダッシュ・スマートクォートを使わない
 ========================================================
 -->
@@ -67,7 +68,10 @@
 #schoomy-634-v1 .schoomy-634-heading__sub{display:block;font-size:13px;font-weight:700;color:#555;letter-spacing:.06em}
 
 #schoomy-634-v1 .schoomy-634-latest{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:48px;align-items:center;padding-bottom:48px;border-bottom:1px solid #e5e5e5}
-#schoomy-634-v1 .schoomy-634-cover{display:block;width:100%;height:auto;box-shadow:0 10px 28px rgba(0,0,0,.18);background:#f2f2f2}
+#schoomy-634-v1 .schoomy-634-frame{display:block;width:100%;max-width:100%;overflow:hidden;background:#f2f2f2}
+#schoomy-634-v1 .schoomy-634-frame img{display:block;width:100%;max-width:none;height:auto;margin:0}
+#schoomy-634-v1 .schoomy-634-frame.is-spread img{width:200%;margin-left:-100%}
+#schoomy-634-v1 .schoomy-634-cover{box-shadow:0 10px 28px rgba(0,0,0,.18)}
 #schoomy-634-v1 .schoomy-634-info{display:flex;flex-direction:column;gap:16px;min-width:0}
 #schoomy-634-v1 .schoomy-634-badge{align-self:flex-start;background:#ffbe00;color:#1a1a1a;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px}
 #schoomy-634-v1 .schoomy-634-issue{font-size:34px;font-weight:900;margin:0;line-height:1.3}
@@ -81,7 +85,7 @@
 #schoomy-634-v1 .schoomy-634-backtitle{font-size:20px;font-weight:900;margin:40px 0 20px}
 #schoomy-634-v1 .schoomy-634-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px;align-items:start}
 #schoomy-634-v1 .schoomy-634-back{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:#1a1a1a}
-#schoomy-634-v1 .schoomy-634-back img{display:block;width:100%;height:auto;box-shadow:0 4px 12px rgba(0,0,0,.14);background:#f2f2f2}
+#schoomy-634-v1 .schoomy-634-back .schoomy-634-frame{box-shadow:0 4px 12px rgba(0,0,0,.14)}
 #schoomy-634-v1 .schoomy-634-back b{font-size:14px}
 #schoomy-634-v1 .schoomy-634-back span{font-size:12px;font-weight:700;color:#555;border-bottom:1px solid currentColor;align-self:flex-start}
 
@@ -132,6 +136,23 @@
     return e;
   }
 
+  // 表紙の画像。横長（見開き）なら右半分の表紙だけを見せる
+  function cover(url, alt, cls) {
+    var frame = el('div', 'schoomy-634-frame' + (cls ? ' ' + cls : ''));
+    var img = el('img');
+    img.alt = alt; img.loading = 'lazy';
+    img.onload = function () {
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (w > h) {
+        frame.className += ' is-spread';
+        frame.style.aspectRatio = (w / 2) + ' / ' + h;
+      }
+    };
+    img.src = String(url).replace('sz=w1200', 'sz=w2400');
+    frame.appendChild(img);
+    return frame;
+  }
+
   function showStatus(msg) {
     latestEl.innerHTML = '';
     latestEl.appendChild(el('p', 'schoomy-634-status', msg));
@@ -142,9 +163,7 @@
     var top = issues[0];
     latestEl.innerHTML = '';
 
-    var img = el('img', 'schoomy-634-cover');
-    img.src = top.cover; img.alt = top.label + 'の表紙'; img.loading = 'lazy';
-    latestEl.appendChild(img);
+    latestEl.appendChild(cover(top.cover, top.label + 'の表紙', 'schoomy-634-cover'));
 
     var info = el('div', 'schoomy-634-info');
     info.appendChild(el('span', 'schoomy-634-badge', '最新号'));
@@ -162,9 +181,7 @@
         var it = issues[i];
         var b = el('a', 'schoomy-634-back');
         b.href = it.download; b.rel = 'noopener';
-        var im = el('img');
-        im.src = it.cover; im.alt = it.label + 'の表紙'; im.loading = 'lazy';
-        b.appendChild(im);
+        b.appendChild(cover(it.cover, it.label + 'の表紙', ''));
         b.appendChild(el('b', '', it.label));
         b.appendChild(el('span', '', 'ダウンロード'));
         shelfEl.appendChild(b);
