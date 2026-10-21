@@ -36,16 +36,7 @@ h2{font-size:16px;margin:0}
     <p class="sub">PDFを選んで「アップして公開」を押すと、すぐにホームページに載ります。</p>
   </header>
 
-  <section class="card" id="passBox">
-    <div>
-      <label for="pass">合言葉</label>
-      <input id="pass" type="password" autocomplete="off">
-      <p class="hint">一度入れると、この端末では次から入れなくて大丈夫です。</p>
-    </div>
-    <button class="btn" id="passBtn" type="button">はじめる</button>
-  </section>
-
-  <div id="main" hidden>
+  <div id="main">
     <section class="card" style="margin-bottom:24px">
       <div>
         <label for="y">何月号ですか</label>
@@ -72,13 +63,9 @@ h2{font-size:16px;margin:0}
 </main>
 
 <script>
-var KEY = 'roksanyon-pass';
-var pass = '';
 function $(id) { return document.getElementById(id); }
 function say(text, ng) { var m = $('msg'); m.textContent = text; m.className = ng ? 'msg ng' : 'msg'; m.hidden = false; }
 function hideMsg() { $('msg').hidden = true; }
-function store(v) { try { if (v) { localStorage.setItem(KEY, v); } else { localStorage.removeItem(KEY); } } catch (e) {} }
-function load() { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
 
 // 月号の初期値は来月（月末に翌月号をアップする想定）
 (function () {
@@ -103,22 +90,13 @@ function renderList(items) {
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.className = 'ghost warn'; b.textContent = 'もう一度押すと取り下げ'; return; }
       b.disabled = true; b.textContent = '取り下げ中';
       google.script.run.withSuccessHandler(function (list) { renderList(list); say(it.label + 'を取り下げました。ホームページからも消えています。'); })
-        .withFailureHandler(function (e) { b.disabled = false; say(e.message, true); }).withdrawIssue(pass, it.id);
+        .withFailureHandler(function (e) { b.disabled = false; say(e.message, true); }).withdrawIssue(it.id);
     };
     row.appendChild(t); row.appendChild(b); box.appendChild(row);
   });
 }
 
-function start(p) {
-  $('passBtn').disabled = true; hideMsg();
-  google.script.run.withSuccessHandler(function (list) {
-    pass = p; store(p); $('passBox').hidden = true; $('main').hidden = false; renderList(list);
-  }).withFailureHandler(function (e) {
-    store(''); $('passBtn').disabled = false; $('passBox').hidden = false; say(e.message, true);
-  }).listIssues(p);
-}
-$('passBtn').onclick = function () { start($('pass').value); };
-if (load()) { $('passBox').hidden = true; start(load()); }
+google.script.run.withSuccessHandler(renderList).withFailureHandler(function (e) { say(e.message, true); }).listIssues();
 
 $('upBtn').onclick = function () {
   var file = $('pdf').files[0];
@@ -133,7 +111,7 @@ $('upBtn').onclick = function () {
       renderList(res.list); say(res.label + 'を公開しました。ホームページに載っています。');
     }).withFailureHandler(function (e) {
       btn.disabled = false; btn.textContent = 'アップして公開'; say(e.message, true);
-    }).uploadIssue(pass, $('y').value, $('m').value, b64);
+    }).uploadIssue($('y').value, $('m').value, b64);
   };
   reader.onerror = function () { btn.disabled = false; btn.textContent = 'アップして公開'; say('PDFを読み込めませんでした。', true); };
   reader.readAsDataURL(file);

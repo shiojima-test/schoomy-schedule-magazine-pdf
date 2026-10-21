@@ -1,5 +1,5 @@
 /**
- * ロクサンヨン アップロード v1.0
+ * ロクサンヨン アップロード v1.1（合言葉なし）
  *
  * サトエリさん用のアップ画面（ウェブアプリ）。
  * 月号を選んでPDFを送ると、ドライブの「ロクサンヨン公開」フォルダに置き、
@@ -7,10 +7,9 @@
  *
  * デプロイ: ウェブアプリ / 次のユーザーとして実行=自分 / アクセス=全員
  */
-var VERSION = '1.0';
+var VERSION = '1.1';
 var FOLDER_ID = '1acenOS-UcYfSbFqtKL_Nt8D8ymrmj6YU';                 // ロクサンヨン公開
 var SHEET_ID = '1v5_TuOy0FcOQoDqXcYIV6YqHJTPburmvtccXyNBwsUc';       // ロクサンヨン掲載一覧（自動・さわらない）
-var PASSCODE = 'roku634';                                             // アップ画面の合言葉
 var HEADER = ['year', 'month', 'label', 'cover_url', 'download_url', 'size_mb', 'file_name', 'updated', 'file_id'];
 var MAX_MB = 30;
 
@@ -20,21 +19,15 @@ function doGet() {
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-function checkPass_(pass) {
-  if (String(pass || '').trim() !== PASSCODE) throw new Error('合言葉がちがいます。');
-}
-
 /** 画面から: 公開中の号の一覧 */
-function listIssues(pass) {
-  checkPass_(pass);
+function listIssues() {
   return collect_().map(function (it) {
     return { id: it.id, label: it.label, uploaded: it.updated };
   });
 }
 
 /** 画面から: アップして公開 */
-function uploadIssue(pass, year, month, base64) {
-  checkPass_(pass);
+function uploadIssue(year, month, base64) {
   year = Number(year); month = Number(month);
   if (!(year >= 2020 && year <= 2100) || !(month >= 1 && month <= 12)) throw new Error('月号の選び方がおかしいようです。');
   if (!base64) throw new Error('PDFが選ばれていません。');
@@ -62,12 +55,11 @@ function uploadIssue(pass, year, month, base64) {
   } finally {
     lock.releaseLock();
   }
-  return { label: year + '年' + month + '月号', id: file.getId(), list: listIssues(pass) };
+  return { label: year + '年' + month + '月号', id: file.getId(), list: listIssues() };
 }
 
 /** 画面から: 取り下げ（ゴミ箱へ。ドライブのゴミ箱から戻せる） */
-function withdrawIssue(pass, fileId) {
-  checkPass_(pass);
+function withdrawIssue(fileId) {
   var file = DriveApp.getFileById(fileId);
   var parents = file.getParents(), inFolder = false;
   while (parents.hasNext()) { if (parents.next().getId() === FOLDER_ID) inFolder = true; }
@@ -80,7 +72,7 @@ function withdrawIssue(pass, fileId) {
   } finally {
     lock.releaseLock();
   }
-  return listIssues(pass);
+  return listIssues();
 }
 
 /** フォルダから号を集める（ファイル名に年月が無いものは載せない・同じ号は新しいほう） */
