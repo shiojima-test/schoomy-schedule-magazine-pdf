@@ -1,0 +1,195 @@
+<!--
+========================================================
+  ロクサンヨン 掲載ブロック v1.0
+  WordPress (SWELL) のカスタムHTMLブロックにそのまま貼る
+  - 号の一覧は掲載一覧シートから自動で読む（このコードは号が増えても貼り直し不要）
+  - すべて #schoomy-634-v1 の中だけに効く（body などには触れない）
+  - WordPress対策: JS に & を使わない / 丸数字・ダッシュ・スマートクォートを使わない
+========================================================
+-->
+<div id="schoomy-634-v1" class="schoomy-634-root">
+
+  <div class="schoomy-634-heading">
+    <div class="schoomy-634-heading__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46" aria-hidden="true">
+        <path fill="#ebebeb" d="M196.16,283.46c28.72,0,49.45-3,66.89-20.41s20.41-34.39,20.41-66.89V87.31c0-28.73-3-49.46-20.41-66.9S228.66,0,196.16,0H87.31C58.58,0,37.85,3,20.41,20.41S0,54.8,0,87.31V196.16c0,28.72,3,49.45,20.41,66.89s34.39,20.41,66.9,20.41Z"/>
+        <rect fill="#ffbe00" x="52.85" y="52.85" width="177.76" height="177.76" rx="16.88"/>
+        <rect fill="#524e5c" stroke="#524e5c" stroke-width="4" x="52.85" y="131.25" width="28.2" height="62.32" rx="5.67"/>
+        <rect fill="#524e5c" stroke="#524e5c" stroke-width="4" x="202.41" y="89.27" width="28.2" height="62.32" rx="5.67"/>
+        <rect fill="#524e5c" stroke="#524e5c" stroke-width="4" x="121.1" y="121.1" width="41.27" height="41.27" rx="6.35"/>
+        <g stroke="#524e5c" stroke-width="4" fill="none">
+          <line x1="81.05" y1="182.06" x2="91.77" y2="182.06"/><line x1="81.05" y1="142.76" x2="91.77" y2="142.76"/>
+          <line x1="81.05" y1="152.58" x2="91.77" y2="152.58"/><line x1="81.05" y1="162.41" x2="91.77" y2="162.41"/>
+          <line x1="81.05" y1="172.24" x2="91.77" y2="172.24"/><line x1="202.41" y1="100.77" x2="191.7" y2="100.77"/>
+          <line x1="202.41" y1="140.08" x2="191.7" y2="140.08"/><line x1="202.41" y1="130.25" x2="191.7" y2="130.25"/>
+          <line x1="202.41" y1="120.42" x2="191.7" y2="120.42"/><line x1="202.41" y1="110.6" x2="191.7" y2="110.6"/>
+        </g>
+        <rect fill="#ebebeb" stroke="#524e5c" stroke-width="4" x="107.57" y="52.85" width="32.21" height="25.16" rx="3.4"/>
+        <rect fill="#ebebeb" stroke="#524e5c" stroke-width="4" x="164.86" y="52.85" width="32.21" height="25.16" rx="3.4"/>
+        <rect fill="#ebebeb" stroke="#524e5c" stroke-width="4" x="143.68" y="205.45" width="32.21" height="25.16" rx="3.4"/>
+        <rect fill="#ebebeb" stroke="#524e5c" stroke-width="4" x="86.4" y="205.45" width="32.21" height="25.16" rx="3.4"/>
+        <rect fill="#ebebeb" stroke="#524e5c" stroke-width="4" x="52.85" y="86.4" width="25.16" height="32.21" rx="3.4"/>
+        <path fill="none" stroke="#ffbe00" stroke-width="4" d="M152.12,138.35v10a4.14,4.14,0,0,1-4.13,4.13h-8.77"/>
+        <g stroke="#524e5c" stroke-width="4" fill="none">
+          <line x1="129.09" y1="113.06" x2="129.09" y2="121.1"/><line x1="154.37" y1="113.06" x2="154.37" y2="121.1"/>
+          <line x1="145.95" y1="113.06" x2="145.95" y2="121.1"/><line x1="137.52" y1="113.06" x2="137.52" y2="121.1"/>
+          <line x1="170.4" y1="129.09" x2="162.37" y2="129.09"/><line x1="170.4" y1="154.37" x2="162.37" y2="154.37"/>
+          <line x1="170.4" y1="145.95" x2="162.37" y2="145.95"/><line x1="170.4" y1="137.52" x2="162.37" y2="137.52"/>
+          <line x1="154.37" y1="170.4" x2="154.37" y2="162.37"/><line x1="129.09" y1="170.4" x2="129.09" y2="162.37"/>
+          <line x1="137.52" y1="170.4" x2="137.52" y2="162.37"/><line x1="145.95" y1="170.4" x2="145.95" y2="162.37"/>
+          <line x1="113.06" y1="154.37" x2="121.1" y2="154.37"/><line x1="113.06" y1="129.09" x2="121.1" y2="129.09"/>
+          <line x1="113.06" y1="137.52" x2="121.1" y2="137.52"/><line x1="113.06" y1="145.95" x2="121.1" y2="145.95"/>
+        </g>
+        <rect fill="none" stroke="#524e5c" stroke-width="9" x="52.85" y="52.85" width="177.76" height="177.76" rx="16.88"/>
+      </svg>
+    </div>
+    <div class="schoomy-634-heading__title"><span class="schoomy-634-heading__sub">スクーミーワールド通信</span>ロクサンヨン</div>
+  </div>
+
+  <section class="schoomy-634-latest" id="schoomy-634-latest">
+    <p class="schoomy-634-status">読み込み中です</p>
+  </section>
+
+  <div class="schoomy-634-backwrap" id="schoomy-634-backwrap" hidden>
+    <div class="schoomy-634-backtitle">バックナンバー</div>
+    <div class="schoomy-634-shelf" id="schoomy-634-shelf"></div>
+  </div>
+</div>
+
+<style>
+#schoomy-634-v1.schoomy-634-root{font-family:Meiryo,"メイリオ",sans-serif;max-width:1200px;margin:0 auto;padding:60px 20px;color:#1a1a1a}
+#schoomy-634-v1 *,#schoomy-634-v1 *::before,#schoomy-634-v1 *::after{box-sizing:border-box}
+#schoomy-634-v1 [hidden]{display:none}
+#schoomy-634-v1 .schoomy-634-heading{display:flex;align-items:center;gap:18px;margin-bottom:36px}
+#schoomy-634-v1 .schoomy-634-heading__icon{width:64px;height:64px;flex-shrink:0}
+#schoomy-634-v1 .schoomy-634-heading__icon svg{width:100%;height:100%;display:block}
+#schoomy-634-v1 .schoomy-634-heading__title{font-size:30px;font-weight:900;letter-spacing:.02em;line-height:1.3}
+#schoomy-634-v1 .schoomy-634-heading__sub{display:block;font-size:13px;font-weight:700;color:#555;letter-spacing:.06em}
+
+#schoomy-634-v1 .schoomy-634-latest{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:48px;align-items:center;padding-bottom:48px;border-bottom:1px solid #e5e5e5}
+#schoomy-634-v1 .schoomy-634-cover{display:block;width:100%;height:auto;box-shadow:0 10px 28px rgba(0,0,0,.18);background:#f2f2f2}
+#schoomy-634-v1 .schoomy-634-info{display:flex;flex-direction:column;gap:16px;min-width:0}
+#schoomy-634-v1 .schoomy-634-badge{align-self:flex-start;background:#ffbe00;color:#1a1a1a;font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px}
+#schoomy-634-v1 .schoomy-634-issue{font-size:34px;font-weight:900;margin:0;line-height:1.3}
+#schoomy-634-v1 .schoomy-634-lead{margin:0;color:#555;line-height:1.8;font-size:15px}
+#schoomy-634-v1 .schoomy-634-dl{align-self:flex-start;display:inline-flex;align-items:center;gap:10px;background:#1a1a1a;color:#fff;text-decoration:none;font-weight:700;font-size:16px;padding:16px 32px;border-radius:999px}
+#schoomy-634-v1 .schoomy-634-dl:hover{background:#333;color:#fff}
+#schoomy-634-v1 .schoomy-634-dl svg{width:18px;height:18px}
+#schoomy-634-v1 .schoomy-634-size{font-size:12px;color:#777}
+#schoomy-634-v1 .schoomy-634-status{grid-column:1/-1;margin:0;color:#777}
+
+#schoomy-634-v1 .schoomy-634-backtitle{font-size:20px;font-weight:900;margin:40px 0 20px}
+#schoomy-634-v1 .schoomy-634-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px;align-items:start}
+#schoomy-634-v1 .schoomy-634-back{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:#1a1a1a}
+#schoomy-634-v1 .schoomy-634-back img{display:block;width:100%;height:auto;box-shadow:0 4px 12px rgba(0,0,0,.14);background:#f2f2f2}
+#schoomy-634-v1 .schoomy-634-back b{font-size:14px}
+#schoomy-634-v1 .schoomy-634-back span{font-size:12px;font-weight:700;color:#555;border-bottom:1px solid currentColor;align-self:flex-start}
+
+@media (max-width:768px){
+  #schoomy-634-v1.schoomy-634-root{padding:40px 16px}
+  #schoomy-634-v1 .schoomy-634-heading{gap:12px;margin-bottom:24px}
+  #schoomy-634-v1 .schoomy-634-heading__icon{width:48px;height:48px}
+  #schoomy-634-v1 .schoomy-634-heading__title{font-size:22px}
+  #schoomy-634-v1 .schoomy-634-latest{grid-template-columns:1fr;gap:24px;justify-items:center;text-align:center}
+  #schoomy-634-v1 .schoomy-634-cover{max-width:280px}
+  #schoomy-634-v1 .schoomy-634-badge,#schoomy-634-v1 .schoomy-634-dl{align-self:center}
+  #schoomy-634-v1 .schoomy-634-issue{font-size:26px}
+  #schoomy-634-v1 .schoomy-634-shelf{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+}
+</style>
+
+<script>
+(function () {
+  var LIST_URL = 'https://docs.google.com/spreadsheets/d/1v5_TuOy0FcOQoDqXcYIV6YqHJTPburmvtccXyNBwsUc/gviz/tq?tqx=out:csv';
+  var LEAD = 'スクーミーの月刊社外報です。毎月のフェスタや学校の取り組み、フェスタの年間スケジュールを掲載しています。';
+  var ICON_DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>';
+
+  var latestEl = document.getElementById('schoomy-634-latest');
+  var backWrap = document.getElementById('schoomy-634-backwrap');
+  var shelfEl = document.getElementById('schoomy-634-shelf');
+
+  function parseCsv(text) {
+    var rows = [], row = [], cell = '', q = false, i, c;
+    for (i = 0; i < text.length; i++) {
+      c = text.charAt(i);
+      if (q) {
+        if (c === '"') {
+          if (text.charAt(i + 1) === '"') { cell += '"'; i++; } else { q = false; }
+        } else { cell += c; }
+      } else if (c === '"') { q = true; }
+      else if (c === ',') { row.push(cell); cell = ''; }
+      else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+      else if (c !== '\r') { cell += c; }
+    }
+    if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) { e.className = cls; }
+    if (text) { e.textContent = text; }
+    return e;
+  }
+
+  function showStatus(msg) {
+    latestEl.innerHTML = '';
+    latestEl.appendChild(el('p', 'schoomy-634-status', msg));
+  }
+
+  function render(issues) {
+    if (!issues.length) { showStatus('準備中です。'); return; }
+    var top = issues[0];
+    latestEl.innerHTML = '';
+
+    var img = el('img', 'schoomy-634-cover');
+    img.src = top.cover; img.alt = top.label + 'の表紙'; img.loading = 'lazy';
+    latestEl.appendChild(img);
+
+    var info = el('div', 'schoomy-634-info');
+    info.appendChild(el('span', 'schoomy-634-badge', '最新号'));
+    info.appendChild(el('p', 'schoomy-634-issue', top.label));
+    info.appendChild(el('p', 'schoomy-634-lead', LEAD));
+    var a = el('a', 'schoomy-634-dl');
+    a.href = top.download; a.rel = 'noopener';
+    a.innerHTML = ICON_DL + 'PDFをダウンロード';
+    info.appendChild(a);
+    if (top.size) { info.appendChild(el('span', 'schoomy-634-size', 'PDF ' + top.size + 'MB')); }
+    latestEl.appendChild(info);
+
+    if (issues.length > 1) {
+      for (var i = 1; i < issues.length; i++) {
+        var it = issues[i];
+        var b = el('a', 'schoomy-634-back');
+        b.href = it.download; b.rel = 'noopener';
+        var im = el('img');
+        im.src = it.cover; im.alt = it.label + 'の表紙'; im.loading = 'lazy';
+        b.appendChild(im);
+        b.appendChild(el('b', '', it.label));
+        b.appendChild(el('span', '', 'ダウンロード'));
+        shelfEl.appendChild(b);
+      }
+      backWrap.hidden = false;
+    }
+  }
+
+  fetch(LIST_URL, { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.text(); })
+    .then(function (text) {
+      var rows = parseCsv(text);
+      if (!rows.length) { render([]); return; }
+      var h = rows[0], idx = {};
+      for (var k = 0; k < h.length; k++) { idx[h[k]] = k; }
+      var issues = [];
+      for (var r = 1; r < rows.length; r++) {
+        var row = rows[r];
+        var url = row[idx.download_url];
+        if (url) {
+          issues.push({ label: row[idx.label], cover: row[idx.cover_url], download: url, size: row[idx.size_mb] });
+        }
+      }
+      render(issues);
+    })
+    .catch(function () { showStatus('読み込めませんでした。時間をおいてもう一度開いてください。'); });
+})();
+</script>

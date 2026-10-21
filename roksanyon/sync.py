@@ -8,6 +8,8 @@ Googleドライブの「ロクサンヨン公開」フォルダにあるPDFを�
 - 載せるPDFには「リンクを知っている全員が閲覧可」を付ける（表紙はドライブのサムネイルで表示）
 - 一覧シートは毎回まるごと書き直す（フォルダから消したPDFは一覧からも消える）
 """
+import csv
+import io
 import json
 import os
 import re
@@ -16,12 +18,12 @@ from datetime import datetime, timezone, timedelta
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 VERSION = '1.0'
 FOLDER_ID = '1acenOS-UcYfSbFqtKL_Nt8D8ymrmj6YU'   # ロクサンヨン公開
 SHEET_ID = '1v5_TuOy0FcOQoDqXcYIV6YqHJTPburmvtccXyNBwsUc'  # ロクサンヨン掲載一覧（自動・さわらない）
-SCOPES = ['https://www.googleapis.com/auth/drive',
-          'https://www.googleapis.com/auth/spreadsheets']
+SCOPES = ['https://www.googleapis.com/auth/drive']  # Sheets API は使わない（プロジェクトで有効化していないため）
 HEADER = ['year', 'month', 'label', 'cover_url', 'download_url', 'size_mb', 'file_name', 'updated']
 JST = timezone(timedelta(hours=9))
 
@@ -53,7 +55,6 @@ def main():
     print(f'ロクサンヨン公開 v{VERSION} / 実行アカウント: {info.get("client_email")}')
     creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
     drive = build('drive', 'v3', credentials=creds)
-    sheets = build('sheets', 'v4', credentials=creds)
 
     # 1) 取得
     files, token = [], None
@@ -98,16 +99,13 @@ def main():
         ])
         print(f'  掲載: {y}年{mo}月号 ← {f["name"]}')
 
-    # 4) 一覧シートを公開（読み取りのみ）にしてから書き直す
+    # 4) 一覧シートを公開（読み取りのみ）にしてから、CSVで中身を丸ごと差し替える
     make_public(drive, SHEET_ID)
-    first = sheets.spreadsheets().get(spreadsheetId=SHEET_ID, fields='sheets(properties(title))').execute()
-    tab = first['sheets'][0]['properties']['title']
-    sheets.spreadsheets().values().clear(spreadsheetId=SHEET_ID, range=f"'{tab}'!A:H").execute()
-    sheets.spreadsheets().values().update(
-        spreadsheetId=SHEET_ID, range=f"'{tab}'!A1",
-        valueInputOption='RAW', body={'values': rows}).execute()
+    buf = io.StringIO()
+    csv.writer(buf, lineterminator='\n').writerows(rows)
+    media = MediaIoBaseUpload(io.BytesIO(buf.getvalue().encode('utf-8')), mimetype='text/csv', resumable=False)
+    drive.files().update(fileId=SHEET_ID, media_body=media).execute()
     print(f'一覧シートを更新: {len(rows) - 1}号')
-
 
 if __name__ == '__main__':
     try:
